@@ -61,7 +61,7 @@
   .pill.warn{color:var(--red);background:var(--red-dim)}
   .pill.dim{color:var(--muted);background:var(--surface2)}
   .pill.ziggy{color:var(--green);background:var(--green-dim)}
-  .pill.lottie{color:var(--purple);background:var(--purple-dim)}
+  .pill.lottie,.pill.lotti{color:var(--purple);background:var(--purple-dim)}
 
   /* cards */
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
@@ -438,6 +438,7 @@
 <script>
 "use strict";
 /* ================= UTILITIES ================= */
+const APP_V="2.2 — 12 July 2026";   // bump whenever you push an update
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const fmtSec = s => { s=Math.max(0,s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
@@ -466,9 +467,9 @@ const DEFAULT_ACTS = [
   {id:"zbb_tr",   kid:"Ziggy", name:"Basketball training", dow:3, start:"18:00", end:"19:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Basketball shoes","Uniform","Water bottle"]},
   {id:"zbb_game", kid:"Ziggy", name:"Basketball game", dow:4, start:"", end:"", termOnly:true, who:"custody", varies:true, note:"Game time changes weekly — set it when the draw is out", gear:["Basketball shoes","Uniform","Water bottle"]},
   {id:"zsoc_game",kid:"Ziggy", name:"Soccer game", dow:5, start:"09:00", end:"10:30", termOnly:true, who:"morning", varies:true, note:"Saturday morning", gear:["Boots","Shin pads","Socks","Water bottle"]},
-  {id:"lchoir",   kid:"Lottie", name:"Bendigo Youth Choir", dow:2, start:"18:00", end:"20:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Folder / music","Water bottle"]},
-  {id:"ldrama",   kid:"Lottie", name:"Props drama", dow:4, start:"16:00", end:"17:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Scripts / props if needed"]},
-  {id:"lgym",     kid:"Lottie", name:"Gymnastics", dow:4, start:"18:00", end:"20:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Gym clothes","Water bottle"]},
+  {id:"lchoir",   kid:"Lotti", name:"Bendigo Youth Choir", dow:2, start:"18:00", end:"20:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Folder / music","Water bottle"]},
+  {id:"ldrama",   kid:"Lotti", name:"Props drama", dow:4, start:"16:00", end:"17:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Scripts / props if needed"]},
+  {id:"lgym",     kid:"Lotti", name:"Gymnastics", dow:4, start:"18:00", end:"20:00", termOnly:true, who:"custody", varies:false, note:"", gear:["Gym clothes","Water bottle"]},
   {id:"volley",   kid:"Me", name:"Volleyball", dow:3, start:"19:15", end:"20:15", termOnly:true, who:"me", varies:true, note:"Games 7:15 or 8:35 — draw not out yet", gear:[]}
 ];
 const DEFAULTS = {
@@ -479,7 +480,7 @@ const DEFAULTS = {
     wake:"06:00", gymStart:"06:30", gymEnd:"07:30", workArrive:"08:10",
     dropoff:"07:30", showers:"19:00", bedtime:"20:00",
     binNightDow:1, recycleAnchor:"2026-07-08", wasteAnchor:"2026-07-15",
-    payAnchor:"2026-07-08", gymTarget:5
+    payAnchor:"2026-07-08", gymTarget:5, myBedtime:"21:30"
   },
   activities: DEFAULT_ACTS,
   weekly:{},            // weekKey -> {times:{actId:"19:15"}, helping:{actId:true}, enabled:{actId:true}}
@@ -515,6 +516,9 @@ const DEFAULTS = {
     {date:"2026-12-26", name:"Boxing Day", work:false},
     {date:"2026-12-28", name:"Boxing Day holiday (in lieu)", work:false}
   ],
+  bp:{ daily:true, log:[] },                  // [{date,time,sys,dia,pulse}]
+  friends:{ list:["Jake","Bodan","Trent","Eric","Jaq","Jess & Sean","Kayla","Mel W","Mel Z","Brent","Royce","Mark P","Craig","Mark D","Shaun"], idx:0, log:[] },
+  grat:{},                                    // date -> ["thing1","thing2","thing3"]
   freeNight:{ opts:{}, plan:null, log:[] },   // opts[id]===false disables an option
   ui:{ open:{} }        // collapsible card states
 };
@@ -525,6 +529,7 @@ function loadStore(){
   S = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS)), saved);
   S.settings = Object.assign({}, DEFAULTS.settings, saved.settings||{});
   if(!saved.activities || !saved.activities.length) S.activities = JSON.parse(JSON.stringify(DEFAULT_ACTS));
+  S.activities.forEach(a=>{ if(a.kid==="Lottie") a.kid="Lotti"; });   // spelling migration
 }
 function save(){ try{ localStorage.setItem("la_v1", JSON.stringify(S)); }catch(e){} }
 
@@ -574,13 +579,14 @@ function actsFor(d, info){
     const enabled = a.termOnly ? (inTerm || (wk.enabled&&wk.enabled[a.id])) : true;
     if(!enabled) return null;
     const start=(wk.times&&wk.times[a.id])||a.start;
+    const loc=(wk.loc&&wk.loc[a.id])||a.loc||"";
     let resp;
     if(a.who==="me") resp="me";
     else if(a.who==="tracey") resp="tracey";
     else if(a.who==="morning") resp=info.morning;
     else resp=info.night;
     if(resp!=="me" && wk.helping&&wk.helping[a.id]) resp="helping";
-    return Object.assign({},a,{start,resp,holidayOverride:a.termOnly&&!inTerm});
+    return Object.assign({},a,{start,resp,loc,holidayOverride:a.termOnly&&!inTerm});
   }).filter(Boolean).sort((a,b)=>toMins(a.start)-toMins(b.start));
 }
 function binStreams(d){
@@ -702,7 +708,7 @@ function buildFreePlan(d,mode){
     if(enabled("walk")&&!trained) items.push("20-minute walk");
     if(enabled("piano")) items.push(S.piano.defaultMins+"-minute piano — one difficult section");
     if(enabled("journal")) items.push("10-minute journal");
-    items.push("Screens off by 9:30");
+    items.push("Screens off by "+fmtTime(S.settings.myBedtime||"21:30"));
   } else if(mode==="prod"){
     if(!resetDone&&enabled("lightreset")) items.push("Light house reset — 10 min");
     if(enabled("mealprep")) items.push("Meal prep for the next couple of days");
@@ -713,9 +719,9 @@ function buildFreePlan(d,mode){
     if(enabled("stretch")) items.push("10-minute stretch / mobility");
     if(enabled("backmin")&&Dt.today()>=S.rehab.start) items.push("Back rehab daily minimum — 10 min");
     if(enabled("med")) items.push("10-minute meditation or breathing reset");
-    if(enabled("early")) items.push("Early night — lights out by 9:30");
+    if(enabled("early")) items.push("Early night — lights out by "+fmtTime(S.settings.myBedtime||"21:30"));
   } else {
-    const pool=FREE_OPTS.filter(o=>enabled(o.id)).map(o=>o.label);
+    const pool=FREE_OPTS.filter(o=>enabled(o.id)).map(o=>(o.id==="friend"&&friendToday())?"Call / message "+friendToday():o.label);
     const n=mode==="three"?3:1, picked=[];
     let seed=Dt.diff(d,"2026-01-01")+(S.freeNight.plan&&S.freeNight.plan.date===d?(S.freeNight.plan.n||0):0);
     for(let i=0;i<n&&pool.length;i++){ picked.push(pool.splice((seed+i*5)%pool.length,1)[0]); }
@@ -787,7 +793,7 @@ function stoicFor(d){
   const base=Dt.parse(d).getDate()-1;
   let idx;
   if(S.stoic.saved[d]!==undefined) idx=S.stoic.saved[d]%pool.length;
-  else idx=(base+(S.stoic.alt[d]||0))%pool.length;
+  else idx=(base*3+(S.stoic.alt[d]||0))%pool.length;   // stride 3 so consecutive days feel clearly different
   return {e:pool[idx], idx, theme:STOIC_THEMES[m]||"Control — mind what is yours"};
 }
 /* ---- STREAK ---- */
@@ -962,11 +968,19 @@ function nowAction(){
   if(t>=19*60+45 && t<21*60+45 && isFreeNight(d))
     return A("Free night. Pick a shape — calm, productive or recovery — and take the three small things it hands you.",
       "No kids, nothing fixed. Structure makes it restful, not rigid.",[["Build tonight","LA.freePlan('calm')"]]);
-  // wind down — stoic, journal, streak
+  // wind down — bedtime, stoic, journal, streak
   const tmInfo=dayInfo(Dt.add(d,1));
-  const windActs=[["Evening reflection","LA.stoicOpen()"],["5-minute journal","LA.go('calm')"]];
+  const windActs=[];
+  if(!S.grat[d]) windActs.push(["3 good things","LA.gratOpen()"]);
+  windActs.push(["Evening reflection","LA.stoicOpen()"]);
   if(!S.streak.checks[d]) windActs.push(["Streak check-in","LA.go('streak')"]);
-  return A("Wind down. "+(tmInfo.gymM&&!trainedOn(Dt.add(d,1))?"Alarm set for 6:00 — "+nx+" in the morning.":"No early gym tomorrow — sleep well.")+" One line of evening reflection closes the day.",
+  if(friendToday()&&!S.friends.log.some(x=>x.date===d)) windActs.push(["Text "+friendToday(),"LA.go('today')"]);
+  const bed=st.myBedtime||"21:30";
+  const gymTm=tmInfo.gymM&&!trainedOn(Dt.add(d,1));
+  if(t>=toMins(bed))
+    return A("Bed. "+(gymTm?"The 6:00 alarm only feels fine after 8 hours — ":"")+"phone down, lights out.",
+      "Kids got their 8pm. This one's yours.",windActs);
+  return A("Wind down. "+(gymTm?"Alarm set for 6:00 — "+nx+" in the morning, so lights out by "+fmtTime(bed)+" for your 8 hours.":"Lights out by "+fmtTime(bed)+" gets you your 8 hours.")+" One line of evening reflection closes the day.",
     info.night==="me"?"Kids are down. You did the day.":"Quiet house tonight.",windActs);
 }
 
@@ -1056,6 +1070,46 @@ function stoicCardHTML(d){
   const teaser=e.q.length>64?e.q.slice(0,61)+"…":e.q;
   return coll("stoic","🏛️ Stoic reflection",inner,{open:S.stoic.mode==="full",sub:"“"+esc(teaser)+"” — "+esc(e.a)});
 }
+function friendToday(){ const l=S.friends.list; return l.length?l[S.friends.idx%l.length]:null; }
+function friendLast(name){ const e=S.friends.log.filter(x=>x.name===name); return e.length?e[e.length-1].date:null; }
+function friendCardHTML(d){
+  const f=friendToday(); if(!f) return "";
+  const doneToday=S.friends.log.some(x=>x.date===d);
+  if(doneToday){ const x=S.friends.log.filter(l=>l.date===d).pop();
+    return '<div class="card"><div class="c-title">👋 Stay close <span class="pill help">'+esc(x.name)+' ✓</span></div></div>'; }
+  const last=friendLast(f);
+  return '<div class="card"><div class="c-title">👋 Stay close: '+esc(f)+'</div>'
+    +'<div class="c-sub">Your person for today — a text counts.'+(last?' Last contact '+Dt.diff(d,last)+' days ago.':' First lap of the rotation.')+'</div>'
+    +'<div class="btn-row"><button class="btn btn-sm btn-primary" onclick="LA.friendDone()">Reached out ✓</button>'
+    +'<button class="btn btn-sm btn-ghost" onclick="LA.friendSkip()">Next friend →</button></div></div>';
+}
+function gratCardHTML(d,t){
+  const g=S.grat[d];
+  if(g) return coll("grat","🙏 Three good things",
+    g.map(x=>'<div class="row-line"><span>'+esc(x)+'</span></div>').join(""),
+    {badge:'<span class="pill help">done ✓</span>',sub:"Saved for tonight — sleep well."});
+  const inner='<div class="c-sub" style="margin-bottom:8px">Before bed: three things that went well today, big or tiny.</div>'
+    +'<div class="field"><input id="gr-1" placeholder="Something that went well…" maxlength="120"></div>'
+    +'<div class="field"><input id="gr-2" placeholder="Something small you enjoyed…" maxlength="120"></div>'
+    +'<div class="field"><input id="gr-3" placeholder="Someone or something you\'re glad exists…" maxlength="120"></div>'
+    +'<button class="btn btn-primary btn-full" onclick="LA.gratSave()">Save & close the day</button>'
+    +'<div class="mini-note">Bonus points: notice <em>why</em> each one happened. One line each is plenty.</div>';
+  return coll("grat","🙏 Three good things",inner,{open:t>=20*60,sub:"Tonight before bed — the best-evidence two minutes there is"});
+}
+function bpCardHTML(d){
+  if(!S.bp.daily) return "";
+  const today=S.bp.log.filter(x=>x.date===d);
+  if(today.length){
+    const l=today[today.length-1];
+    return '<div class="card"><div class="c-title">🩺 Blood pressure <span class="pill help">'+l.sys+'/'+l.dia+(l.pulse?' · '+l.pulse+' bpm':'')+' ✓</span></div></div>';
+  }
+  return '<div class="card"><div class="c-title">🩺 Blood pressure</div>'
+    +'<div class="field-row" style="margin-top:8px">'
+    +'<div class="field" style="margin-bottom:0"><label>Sys</label><input type="number" id="bp-sys" inputmode="numeric" placeholder="120"></div>'
+    +'<div class="field" style="margin-bottom:0"><label>Dia</label><input type="number" id="bp-dia" inputmode="numeric" placeholder="80"></div>'
+    +'<div class="field" style="margin-bottom:0"><label>Pulse</label><input type="number" id="bp-pulse" inputmode="numeric" placeholder="opt."></div>'
+    +'</div><div class="btn-row"><button class="btn btn-sm btn-primary" onclick="LA.bpSave()">Save reading</button></div></div>';
+}
 function streakCardHTML(d){
   const st=S.streak;
   const sub=st.privacy?"":('<div class="c-sub">Day '+streakDays()+(st.checks[d]?" · checked in ✓":"")+'</div>');
@@ -1079,6 +1133,7 @@ function renderToday(){
   // body
   let h="";
   h+=trtCardHTML(d,t);
+  h+=bpCardHTML(d);
   h+=rehabCheckHTML(d);
   h+=rehabTodayCardHTML(d);
   // timeline
@@ -1121,6 +1176,8 @@ function renderToday(){
     +(info.bins?" Bins are folded in.":"")+'</div></button>';
   if(S.note) h+='<div class="card calm"><div class="c-title" style="font-size:13px;color:var(--green)">LAST NIGHT YOU SAID</div><div class="c-sub" style="color:var(--text)">'+esc(S.note)
     +'</div><div class="btn-row"><button class="btn btn-sm btn-ghost" onclick="LA.clearNote()">Clear</button></div></div>';
+  // friend rotation
+  h+=friendCardHTML(d);
   // free night
   h+=freeNightCardHTML(d,t);
   // launchpad
@@ -1129,8 +1186,9 @@ function renderToday(){
     +coll("lp","🚀 Tomorrow launchpad",
       '<div class="c-sub" style="margin-bottom:10px">'+Dt.short(Dt.add(d,1))+' — set tomorrow up tonight.</div>'+checklistHTML(d,"lp",lp),
       {open:t>=18*60, badge:'<span class="pill '+(lpDone>=lp.length?'help':'dim')+'">'+lpDone+'/'+lp.length+'</span>', sub:Dt.short(Dt.add(d,1))+" — "+lp.length+" quick things"});
-  // stoic + streak
+  // stoic + gratitude + streak
   h+=stoicCardHTML(d);
+  h+=gratCardHTML(d,t);
   h+=streakCardHTML(d);
   // win line
   const win=S.win[d]||winSuggestion(info);
@@ -1152,13 +1210,15 @@ function timelineHTML(d,info,t){
   info.acts.forEach(a=>{
     const who=a.resp==="me"?'<span class="pill me">you</span>':a.resp==="helping"?'<span class="pill help">helping</span>':a.resp==="tracey"?'<span class="pill tracey">Tracey</span>':'<span class="pill tracey">Tracey</span>';
     const kid=a.kid==="Me"?'':'<span class="pill '+a.kid.toLowerCase()+'">'+a.kid+'</span> ';
-    rows.push({m:toMins(a.start),time:a.start,label:kid+esc(a.name)+" "+who,cls:(a.resp==="tracey"?"dim":"")});
+    const loc=a.loc?' <span style="color:var(--muted);font-size:12px">📍'+esc(a.loc)+'</span>':'';
+    rows.push({m:toMins(a.start),time:a.start,label:kid+esc(a.name)+loc+" "+who,cls:(a.resp==="tracey"?"dim":"")});
   });
   info.events.forEach(e=>add(e.time||"12:00","📌 "+esc(e.title)));
   if(info.night==="me"){ add(st.showers,"Kids' showers"); add("19:00","7pm reset (25 min)"); add(st.bedtime,"Lights out"); }
   else add("19:00","7pm reset — lighter, no kids");
   if(info.bins) add("19:30","Bins out: "+info.bins.join(" + "));
   add("19:45","Tomorrow launchpad");
+  add(st.myBedtime||"21:30","🌙 Your wind-down — 8 hours starts here");
   rows.sort((a,b)=>a.m-b.m);
   // mark current
   let nowIdx=-1;
@@ -1181,7 +1241,7 @@ function renderCal(){
     const info=dayInfo(d);
     let dots="";
     info.acts.slice(0,3).forEach(a=>{
-      const col=a.kid==="Ziggy"?"var(--green)":a.kid==="Lottie"?"var(--purple)":"var(--amber)";
+      const col=a.kid==="Ziggy"?"var(--green)":a.kid==="Lotti"?"var(--purple)":"var(--amber)";
       dots+='<span class="cdot" style="background:'+col+'"></span>';
     });
     if(info.bins) dots+='<span class="cdot" style="background:var(--muted)"></span>';
@@ -1200,7 +1260,7 @@ function renderCal(){
     +'<span><span class="lg" style="background:var(--amber)"></span>Your night</span>'
     +'<span><span class="lg" style="background:var(--blue)"></span>Tracey night</span>'
     +'<span><span class="lg" style="background:var(--green)"></span>Ziggy</span>'
-    +'<span><span class="lg" style="background:var(--purple)"></span>Lottie</span>'
+    +'<span><span class="lg" style="background:var(--purple)"></span>Lotti</span>'
     +'<span><span class="lg" style="background:var(--muted)"></span>Bins</span>'
     +'<span><span class="lg" style="background:var(--red)"></span>Event</span>'
     +'<span><span class="lg" style="background:none;border:1.5px solid var(--red)"></span>Public holiday</span>'
@@ -1224,7 +1284,7 @@ function daySheetHTML(d){
   if(info.gymE) lines.push(['<span>🏋️ Gym possible — evening</span>','free']);
   info.acts.forEach(a=>{
     const who=a.resp==="me"?'<span class="pill me">you</span>':a.resp==="helping"?'<span class="pill help">helping</span>':'<span class="pill tracey">Tracey</span>';
-    lines.push(['<span>'+(a.kid!=="Me"?'<span class="pill '+a.kid.toLowerCase()+'">'+a.kid+'</span> ':'🏐 ')+esc(a.name)+' '+who+'</span>',fmtTime(a.start)]);
+    lines.push(['<span>'+(a.kid!=="Me"?'<span class="pill '+a.kid.toLowerCase()+'">'+a.kid+'</span> ':'🏐 ')+esc(a.name)+(a.loc?' <span style="color:var(--muted);font-size:12px">📍'+esc(a.loc)+'</span>':'')+' '+who+'</span>',fmtTime(a.start)]);
   });
   if(info.bins) lines.push(['<span>🗑️ Bins out: '+info.bins.join(" + ")+'</span>','7:30pm']);
   if(info.pay) lines.push(['<span>💰 Pay day</span>','']);
@@ -1269,12 +1329,13 @@ function renderKids(){
     di.acts.forEach(a=>{
       const who=a.resp==="me"?'<span class="pill me">you take</span>':a.resp==="helping"?'<span class="pill help">you\'re helping</span>':'<span class="pill tracey">Tracey — FYI</span>';
       h+='<div class="row-line'+(a.resp==="tracey"?" dim":"")+'"><span>'
-        +(a.kid!=="Me"?'<span class="pill '+a.kid.toLowerCase()+'">'+a.kid+'</span> ':'🏐 ')+esc(a.name)+' '+who+'</span>'
+        +(a.kid!=="Me"?'<span class="pill '+a.kid.toLowerCase()+'">'+a.kid+'</span> ':'🏐 ')+esc(a.name)
+        +(a.loc?' <span style="color:var(--muted);font-size:12px">📍'+esc(a.loc)+'</span>':'')+' '+who+'</span>'
         +'<span class="rl-time">'+fmtTime(a.start)+'</span></div>';
       if(a.note) h+='<div class="mini-note" style="margin:0 0 4px">'+esc(a.note)+'</div>';
       const row=[];
       if(a.gear&&a.gear.length&&a.resp!=="tracey") row.push('<button class="btn btn-sm btn-secondary" onclick="LA.gearSheet(\''+a.id+'\',\''+dd+'\')">🎒 Gear</button>');
-      if(a.varies) row.push('<button class="btn btn-sm btn-ghost" onclick="LA.timeSheet(\''+a.id+'\',\''+wkKey+'\')">🕐 Set this week\'s time</button>');
+      if(a.varies) row.push('<button class="btn btn-sm btn-ghost" onclick="LA.upcomingSheet(\''+a.id+'\')">🕐 Upcoming times &amp; places</button>');
       if((a.who==="custody"||a.who==="tracey"||a.who==="morning") && a.resp!=="me") row.push('<button class="btn btn-sm btn-ghost" onclick="LA.toggleHelp(\''+a.id+'\',\''+wkKey+'\')">'+(a.resp==="helping"?"Not helping after all":"I\'m helping this week")+'</button>');
       if(row.length) h+='<div class="btn-row" style="margin-top:6px">'+row.join("")+'</div>';
     });
@@ -1600,7 +1661,7 @@ function renderReview(){
   let h='<div class="chips"><div class="chip">🏋️ <strong>'+gym+'</strong> gym</div><div class="chip">🧹 <strong>'+resets+'</strong> resets</div><div class="chip">✅ <strong>'+cleared+'</strong> tasks cleared</div></div>';
   // calm scorecard
   h+='<div class="section-label">Calm scorecard — patterns, not scores</div><div class="card">';
-  const rows=[["Gym",dd=>trainedOn(dd)],["Reset",dd=>S.resets.some(r=>r.date===dd)],["Launchpad",dd=>getChecks(dd,"lp").length>0],["Kids prep",dd=>getChecks(dd,"nr").length>0||getChecks(dd,"sm").length>0]];
+  const rows=[["Gym",dd=>trainedOn(dd)],["Reset",dd=>S.resets.some(r=>r.date===dd)],["Launchpad",dd=>getChecks(dd,"lp").length>0],["Kids prep",dd=>getChecks(dd,"nr").length>0||getChecks(dd,"sm").length>0],["Gratitude",dd=>!!S.grat[dd]],["Friends",dd=>S.friends.log.some(x=>x.date===dd)]];
   h+='<div class="score-grid">';
   h+='<span class="sg-lbl"></span>'+[6,5,4,3,2,1,0].map(i=>'<span style="text-align:center">'+DOWS[Dt.dow(Dt.add(d,-i))].slice(0,1)+'</span>').join("");
   rows.forEach(([lbl,fn])=>{
@@ -1642,7 +1703,8 @@ function renderMore(){
      '<button class="card tap" onclick="LA.go(\'work\')"><div class="c-title">💼 Work / Admin <span>›</span></div><div class="c-sub">Top 3, follow-ups, parking lot</div></button>',
      '<button class="card tap" onclick="LA.go(\'review\')"><div class="c-title">🧭 Weekly review <span>›</span></div><div class="c-sub">Sunday check-in, calm scorecard, next week preview</div></button>',
      '<button class="card tap" onclick="LA.go(\'settings\')"><div class="c-title">⚙️ Settings <span>›</span></div><div class="c-sub">Dates, activities, anchors, backup</div></button>',
-     '<button class="card tap" onclick="LA.go(\'help\')"><div class="c-title">❓ Help <span>›</span></div><div class="c-sub">Save to iPhone Home Screen, how data works</div></button>'].join("");
+     '<button class="card tap" onclick="LA.go(\'help\')"><div class="c-title">❓ Help <span>›</span></div><div class="c-sub">Save to iPhone Home Screen, how data works</div></button>',
+     '<div class="mini-note" style="text-align:center;margin-top:14px">Version '+APP_V+'</div>'].join("");
 }
 function renderSettings(){
   const st=S.settings;
@@ -1656,7 +1718,8 @@ function renderSettings(){
   h+='<div class="section-label">Times</div><div class="field-row">'
     +timeField("Wake","wake",st.wake)+timeField("Gym start","gymStart",st.gymStart)+'</div><div class="field-row">'
     +timeField("Kids drop-off","dropoff",st.dropoff)+timeField("Work arrive","workArrive",st.workArrive)+'</div><div class="field-row">'
-    +timeField("Showers","showers",st.showers)+timeField("Lights out","bedtime",st.bedtime)+'</div>';
+    +timeField("Showers","showers",st.showers)+timeField("Kids lights out","bedtime",st.bedtime)+'</div><div class="field-row">'
+    +timeField("Your bedtime (8ish hours)","myBedtime",st.myBedtime||"21:30")+'</div>';
   h+='<div class="field"><label>Gym target / week</label><select onchange="LA.setSet(\'gymTarget\',Number(this.value))">'
     +[3,4,5,6].map(n=>'<option'+(st.gymTarget===n?" selected":"")+'>'+n+'</option>').join("")+'</select></div>';
   h+='<div class="section-label">Term dates 2026</div>';
@@ -1691,6 +1754,11 @@ function renderSettings(){
   h+='<div class="field"><label>Default practice length</label><select onchange="LA.pianoDefault(this.value)">'+[10,15,20,30].map(m=>'<option'+(S.piano.defaultMins===m?" selected":"")+'>'+m+'</option>').join("")+'</select></div>';
   h+='<div class="field"><label>Free night menu — tap to disable/enable</label><div class="chiprow tight" style="margin-top:4px">'
     +FREE_OPTS.map(o=>'<button class="'+(S.freeNight.opts[o.id]!==false?"on":"")+'" onclick="LA.freeOpt(\''+o.id+'\')">'+o.label+'</button>').join("")+'</div></div>';
+  h+='<div class="section-label">Friends rotation</div>';
+  h+='<div class="field"><label>One name per line — '+S.friends.list.length+' names = a '+S.friends.list.length+'-day cycle</label>'
+    +'<textarea id="fr-list" rows="6">'+esc(S.friends.list.join("\n"))+'</textarea></div>'
+    +'<div class="btn-row" style="margin-bottom:4px"><button class="btn btn-sm btn-secondary" onclick="LA.friendsSave()">Save list</button></div>'
+    +'<div class="mini-note" style="margin-bottom:8px">Next up: '+esc(friendToday()||"—")+'. The rotation is a queue, not a schedule — missed days just wait for you.</div>';
   h+='<div class="section-label">Public holidays 2026</div>';
   S.holidays.forEach((hol,i)=>{
     h+='<div class="row-line"><span>'+Dt.short(hol.date)+' — '+esc(hol.name)+' <button style="color:var(--red);font-size:12px" onclick="LA.holDel('+i+')">remove</button></span>'
@@ -1715,13 +1783,14 @@ function actEditHTML(id){
   const sel=(opts,val)=>opts.map(o=>'<option value="'+o[0]+'"'+(String(val)===String(o[0])?" selected":"")+'>'+o[1]+'</option>').join("");
   return '<h3>'+(id?"Edit activity":"New activity")+'</h3>'
     +'<div class="field" style="margin-top:10px"><label>Name</label><input id="ae-name" value="'+esc(a.name)+'" placeholder="e.g. Swimming lessons"></div>'
-    +'<div class="field-row"><div class="field"><label>Who is it for</label><select id="ae-kid">'+sel([["Ziggy","Ziggy"],["Lottie","Lottie"],["Me","Me"]],a.kid)+'</select></div>'
+    +'<div class="field-row"><div class="field"><label>Who is it for</label><select id="ae-kid">'+sel([["Ziggy","Ziggy"],["Lotti","Lotti"],["Me","Me"]],a.kid)+'</select></div>'
     +'<div class="field"><label>Day</label><select id="ae-dow">'+sel(DOWS.map((n,i)=>[i,n]),a.dow)+'</select></div></div>'
     +'<div class="field-row"><div class="field"><label>Start</label><input type="time" id="ae-start" value="'+a.start+'"></div>'
     +'<div class="field"><label>End</label><input type="time" id="ae-end" value="'+a.end+'"></div></div>'
     +'<div class="field"><label>Who manages it</label><select id="ae-who">'+sel([["custody","Whoever has the kids that night"],["morning","Whoever had them overnight (morning events)"],["me","Always you"],["tracey","Always Tracey"]],a.who)+'</select></div>'
     +'<div class="field-row"><div class="field"><label>Term only?</label><select id="ae-term">'+sel([["1","Yes — school terms"],["0","All year"]],a.termOnly?"1":"0")+'</select></div>'
     +'<div class="field"><label>Time varies weekly?</label><select id="ae-varies">'+sel([["0","No"],["1","Yes — set weekly"]],a.varies?"1":"0")+'</select></div></div>'
+    +'<div class="field"><label>Usual location (optional)</label><input id="ae-loc" value="'+esc(a.loc||"")+'" placeholder="e.g. Epsom Huntly Rec Reserve"></div>'
     +'<div class="field"><label>Gear list (comma separated)</label><input id="ae-gear" value="'+esc((a.gear||[]).join(", "))+'"></div>'
     +'<div class="field"><label>Note</label><input id="ae-note" value="'+esc(a.note||"")+'"></div>'
     +'<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="LA.actSave(\''+(id||"")+'\')">Save</button>'
@@ -1807,6 +1876,24 @@ function renderHealth(){
       +'<button class="btn btn-sm btn-secondary" onclick="LA.trtDelay()">Delay</button>'
       +'<button class="btn btn-sm btn-ghost" onclick="LA.trtMark(\'skipped\')">Skipped</button></div>';
   h+='<div class="mini-note">Edit dose, days and times in Settings → Health.</div></div>';
+  // blood pressure
+  const bp7=S.bp.log.filter(x=>Dt.diff(d,x.date)<7);
+  h+='<div class="section-label">Blood pressure</div><div class="card">';
+  h+='<div class="field-row"><div class="field" style="margin-bottom:6px"><label>Sys</label><input type="number" id="bp-sys" inputmode="numeric" placeholder="120"></div>'
+    +'<div class="field" style="margin-bottom:6px"><label>Dia</label><input type="number" id="bp-dia" inputmode="numeric" placeholder="80"></div>'
+    +'<div class="field" style="margin-bottom:6px"><label>Pulse</label><input type="number" id="bp-pulse" inputmode="numeric" placeholder="opt."></div></div>'
+    +'<div class="btn-row" style="margin-top:0"><button class="btn btn-sm btn-primary" onclick="LA.bpSave()">Save reading</button>'
+    +'<button class="btn btn-sm btn-secondary" onclick="LA.bpExport()">Export CSV</button></div>';
+  if(bp7.length){
+    const avg=k=>Math.round(bp7.reduce((a,x)=>a+x[k],0)/bp7.length);
+    h+='<div class="mini-note">7-day average: <strong style="color:var(--text)">'+avg("sys")+'/'+avg("dia")+'</strong> across '+bp7.length+' reading'+(bp7.length===1?"":"s")+'.</div>';
+  }
+  const bpRecent=S.bp.log.slice(-7).reverse();
+  if(bpRecent.length){ h+='<div class="divider"></div>'; bpRecent.forEach(r=>{
+    h+='<div class="row-line"><span>'+Dt.short(r.date)+' · '+fmtTime(r.time)+'</span><span class="rl-time">'+r.sys+'/'+r.dia+(r.pulse?' · '+r.pulse:"")+'</span></div>'; });
+  } else h+='<div class="mini-note">No readings yet. Same time each day gives the most useful pattern — after the morning routine works well.</div>';
+  h+='</div>';
+  h+='<button class="toggle-row" onclick="LA.bpToggle()"><div><div class="tr-name">Daily reminder card</div><div class="tr-desc">Show a blood pressure card on Today until logged</div></div><div class="switch'+(S.bp.daily?" on":"")+'"></div></button>';
   $("health-body").innerHTML=h;
 }
 function rehabSheetHTML(){
@@ -1983,6 +2070,40 @@ const LA={
     if(S.packed[d]&&S.packed[d][actId]) S.packed[d][actId]=[];
     save(); LA.openSheet(gearSheetHTML(actId,d));
   },
+  upcomingSheet(actId){
+    const a=S.activities.find(x=>x.id===actId); if(!a) return;
+    const dates=[];
+    for(let i=0;i<130&&dates.length<5;i++){
+      const d2=Dt.add(Dt.today(),i);
+      if(Dt.dow(d2)!==a.dow) continue;
+      const wk=S.weekly[Dt.monday(d2)]||{};
+      if(a.termOnly && termOf(d2)===0 && !(wk.enabled&&wk.enabled[a.id])) continue;
+      dates.push(d2);
+    }
+    LA.upA=actId; LA.upDates=dates;
+    if(!dates.length){ LA.openSheet('<h3>No upcoming dates</h3><div class="sub">Nothing scheduled in the next few months — school holidays? Enable a week from the Kids screen first.</div>'); return; }
+    let h='<h3>🕐 '+esc(a.kid==="Me"?a.name:a.kid+" — "+a.name)+'</h3>'
+      +'<div class="sub">Fill in what you know from the draw — blank keeps the default'+(a.start?' ('+fmtTime(a.start)+')':' (time TBC)')+'.</div>';
+    dates.forEach((d2,i)=>{
+      const wk=S.weekly[Dt.monday(d2)]||{};
+      const tv=(wk.times&&wk.times[actId])||"", lv=(wk.loc&&wk.loc[actId])||"";
+      h+='<div class="field-row" style="margin-top:6px"><div class="field" style="max-width:128px;margin-bottom:4px"><label>'+Dt.short(d2)+'</label><input type="time" id="ut-'+i+'" value="'+tv+'"></div>'
+        +'<div class="field" style="margin-bottom:4px"><label>Location</label><input id="ul-'+i+'" value="'+esc(lv)+'" placeholder="'+esc(a.loc||"optional")+'"></div></div>';
+    });
+    h+='<button class="btn btn-primary btn-full" style="margin-top:10px" onclick="LA.upcomingSave()">Save all</button>';
+    LA.openSheet(h);
+  },
+  upcomingSave(){
+    const id=LA.upA;
+    LA.upDates.forEach((d2,i)=>{
+      const wkKey=Dt.monday(d2), tv=$("ut-"+i).value, lv=$("ul-"+i).value.trim();
+      const wk=S.weekly[wkKey]=S.weekly[wkKey]||{};
+      wk.times=wk.times||{}; wk.loc=wk.loc||{};
+      if(tv) wk.times[id]=tv; else delete wk.times[id];
+      if(lv) wk.loc[id]=lv; else delete wk.loc[id];
+    });
+    save(); LA.closeSheet(); LA.render();
+  },
   timeSheet(actId,wkKey){
     const a=S.activities.find(x=>x.id===actId);
     const wk=S.weekly[wkKey]||{}; const cur=(wk.times&&wk.times[actId])||a.start||"";
@@ -2073,6 +2194,48 @@ const LA={
   trtRow(i,k,v){ S.trt.schedule[i][k]=v; save(); renderSettings(); },
   trtAdd(){ S.trt.schedule.push({dow:0,time:"07:00"}); save(); renderSettings(); },
   trtDel(i){ S.trt.schedule.splice(i,1); save(); renderSettings(); },
+  /* friends rotation */
+  friendDone(){
+    const f=friendToday(); if(!f) return;
+    S.friends.log.push({date:Dt.today(),name:f});
+    if(S.friends.log.length>500) S.friends.log=S.friends.log.slice(-500);
+    S.friends.idx=(S.friends.idx+1)%S.friends.list.length;
+    save(); LA.render();
+  },
+  friendSkip(){ if(!S.friends.list.length) return; S.friends.idx=(S.friends.idx+1)%S.friends.list.length; save(); LA.render(); },
+  friendsSave(){
+    const lines=$("fr-list").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    if(!lines.length){ alert("Need at least one name."); return; }
+    S.friends.list=lines; S.friends.idx=S.friends.idx%lines.length;
+    save(); renderSettings();
+  },
+  /* gratitude */
+  gratSave(){
+    const items=[$("gr-1").value.trim(),$("gr-2").value.trim(),$("gr-3").value.trim()].filter(Boolean);
+    if(!items.length){ alert("Even one small thing counts."); return; }
+    S.grat[Dt.today()]=items; save(); LA.render();
+  },
+  gratOpen(){ S.ui.open.grat=true; save(); LA.go("today"); },
+  /* blood pressure */
+  bpSave(){
+    const sys=Number($("bp-sys").value), dia=Number($("bp-dia").value), pulse=Number($("bp-pulse").value)||null;
+    if(!sys||!dia||sys<50||sys>260||dia<30||dia>200){ alert("Need a believable systolic and diastolic (e.g. 120 / 80)."); return; }
+    const n=new Date();
+    S.bp.log.push({date:Dt.today(),time:String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0"),sys,dia,pulse});
+    if(S.bp.log.length>1000) S.bp.log=S.bp.log.slice(-1000);
+    save(); LA.render();
+  },
+  bpToggle(){ S.bp.daily=!S.bp.daily; save(); LA.render(); },
+  bpExport(){
+    if(!S.bp.log.length){ alert("No readings yet."); return; }
+    const csv="date,time,systolic,diastolic,pulse\n"+S.bp.log.map(r=>[r.date,r.time,r.sys,r.dia,r.pulse||""].join(",")).join("\n");
+    LA.openSheet('<h3>🩺 Export readings</h3><div class="sub">'+S.bp.log.length+' readings as CSV — copy into Notes, Numbers, or an email to your GP.</div>'
+      +'<div class="field" style="margin-top:10px"><textarea rows="8" id="bp-csv" readonly>'+esc(csv)+'</textarea></div>'
+      +'<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="LA.bpCopy()">Copy CSV</button>'
+      +(navigator.share?'<button class="btn btn-secondary" onclick="LA.bpShare()">Share…</button>':"")+'</div>');
+  },
+  bpCopy(){ const b=$("bp-csv"); b.select(); try{document.execCommand("copy");}catch(e){} if(navigator.clipboard)navigator.clipboard.writeText(b.value).catch(()=>{}); alert("Copied."); },
+  bpShare(){ const b=$("bp-csv"); if(navigator.share) navigator.share({title:"Blood pressure log",text:b.value}).catch(()=>{}); },
   /* back rehab */
   rehabStatus(s){ const d=Dt.today(); if(S.rehab.status[d]===s) delete S.rehab.status[d]; else S.rehab.status[d]=s; save(); LA.render(); },
   rehabNext(date,resp){ S.rehab.nextDay[date]={response:resp,on:Dt.today()}; save(); LA.render(); },
@@ -2164,7 +2327,7 @@ const LA={
     const get=k=>$(k).value;
     const data={ name:get("ae-name").trim()||"Activity", kid:get("ae-kid"), dow:Number(get("ae-dow")),
       start:get("ae-start"), end:get("ae-end"), who:get("ae-who"),
-      termOnly:get("ae-term")==="1", varies:get("ae-varies")==="1",
+      termOnly:get("ae-term")==="1", varies:get("ae-varies")==="1", loc:get("ae-loc").trim(),
       gear:get("ae-gear").split(",").map(s=>s.trim()).filter(Boolean), note:get("ae-note").trim() };
     if(id){ const a=S.activities.find(x=>x.id===id); Object.assign(a,data); }
     else S.activities.push(Object.assign({id:uid()},data));
@@ -2209,8 +2372,17 @@ $("btn-finish").addEventListener("click",()=>{
   const v=$("note-input").value.trim(); if(v){ S.note=v; save(); }
   LA.go("today");
 });
-setInterval(()=>{ if(document.visibilityState==="visible"&&LA.current==="today") renderToday(); },60000);
+/* iOS keeps home-screen apps frozen for days — force a fresh render on reopen and at date rollover */
+let lastRenderDay=null;
+function freshCheck(){
+  const now=Dt.today();
+  if(lastRenderDay!==now){ lastRenderDay=now; if(!R.running) LA.go("today"); }
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") freshCheck(); });
+window.addEventListener("pageshow",freshCheck);
+setInterval(()=>{ freshCheck(); if(document.visibilityState==="visible"&&LA.current==="today") renderToday(); },60000);
 loadStore();
+lastRenderDay=Dt.today();
 LA.go("today");
 </script>
 
