@@ -2,8 +2,9 @@
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#101318">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Life">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,23 +22,23 @@
     --red:#d97a6c; --red-dim:rgba(217,122,108,.14);
     --blue:#7aa2d6; --blue-dim:rgba(122,162,214,.14);
     --purple:#b48bd6; --purple-dim:rgba(180,139,214,.16);
-    --radius:16px;
+    --radius:16px; color-scheme:dark;
     --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
-  body{background:var(--bg);color:var(--text);
+  body{background:var(--bg);color:var(--text);overflow-x:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:16px;line-height:1.45;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
   .app{max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
-  .screen{display:none;flex-direction:column;min-height:100dvh;padding:18px 16px calc(92px + env(safe-area-inset-bottom))}
+  .screen{display:none;flex-direction:column;min-height:100dvh;padding:calc(18px + env(safe-area-inset-top)) 16px calc(92px + env(safe-area-inset-bottom))}
   .screen.active{display:flex}
   button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;touch-action:manipulation;text-align:left}
   button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   input,select,textarea{font:inherit;color:var(--text)}
   input,select,textarea{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px 13px;font-size:15px;width:100%}
   input::placeholder,textarea::placeholder{color:#5c6673}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber)}
   input[type=time],input[type=date]{-webkit-appearance:none;min-height:46px}
 
   /* type */
@@ -78,7 +79,7 @@
   .row-line.dim{opacity:.55}
 
   /* big action button */
-  .whatnow{width:100%;background:var(--amber);color:#101318;border-radius:var(--radius);padding:16px;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;margin-top:14px;transition:transform .08s}
+  .whatnow{width:100%;background:var(--amber);color:#101318;border-radius:var(--radius);padding:16px;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;margin-top:14px;transition:transform .08s;position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:12;box-shadow:0 8px 28px rgba(0,0,0,.32)}
   .whatnow:active{transform:scale(.97)}
   .now-card{margin-top:10px;background:var(--amber-dim);border:1px solid rgba(237,169,78,.4);border-radius:var(--radius);padding:14px;display:none}
   .now-card.show{display:block}
@@ -161,9 +162,9 @@
 
   /* tab bar */
   .tabbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;display:flex;background:rgba(16,19,24,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:30}
-  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--muted);font-weight:600;padding:4px 0}
+  .tabbar button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--muted);font-weight:600;padding:6px 2px;border-radius:10px}
   .tabbar button .tb-ic{font-size:20px;line-height:1}
-  .tabbar button.on{color:var(--amber)}
+  .tabbar button.on{color:var(--amber);background:var(--amber-dim)}
   .tabbar.hidden{display:none}
 
   /* sub-screen header */
@@ -260,12 +261,17 @@
   .big-count{font-family:var(--mono);font-size:54px;font-weight:700;text-align:center;line-height:1.1;padding:10px 0 2px}
   .big-count small{font-size:13px;color:var(--muted);font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-weight:600;display:block;margin-top:4px}
   .mini-note{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translate(-50%,18px);max-width:calc(100% - 32px);background:#eef1f5;color:#101318;border-radius:999px;padding:10px 16px;font-size:13.5px;font-weight:700;box-shadow:0 10px 32px rgba(0,0,0,.4);opacity:0;pointer-events:none;z-index:80;transition:opacity .18s,transform .18s;text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.error{background:#f4d6d1;color:#5d1f17}
+  .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
   .field{margin-bottom:12px}
   .field label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px}
   .field-row{display:flex;gap:8px}.field-row .field{flex:1}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 10px}
   .divider{height:1px;background:var(--line);margin:14px 0}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:370px){.screen{padding-left:12px;padding-right:12px}.tabbar button{font-size:9.5px}.tabbar button .tb-ic{font-size:18px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -362,7 +368,7 @@
     <div class="run-top">
       <div class="run-mode" id="run-mode-label">Reset</div>
       <div class="big-timer" id="big-timer">25:00</div>
-      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-track" id="reset-progress" role="progressbar" aria-label="Reset progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="zone-dots" id="zone-dots"></div>
       <button class="interrupt-btn" id="btn-interrupt">⏸︎ Kid interruption</button>
     </div>
@@ -409,10 +415,10 @@
   </div>
 
   <!-- pause overlay -->
-  <div class="overlay" id="pause-overlay">
+  <div class="overlay" id="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title" aria-hidden="true">
     <div class="overlay-card">
       <div class="o-icon">👦</div>
-      <h2>Paused</h2>
+      <h2 id="pause-title">Paused</h2>
       <p>Timer's on hold. Go be a dad — the house can wait.</p>
       <button class="btn btn-primary btn-full" id="btn-resume">Resume reset</button>
       <button class="btn btn-ghost btn-full" id="btn-abandon" style="margin-top:10px">End tonight's reset</button>
@@ -421,26 +427,28 @@
 
   <!-- generic bottom sheet -->
   <div class="sheet-back" id="sheet-back" onclick="LA.closeSheet()"></div>
-  <div class="sheet" id="sheet"><div class="sh-grab"></div><div id="sheet-body"></div></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1"><div class="sh-grab" aria-hidden="true"></div><div id="sheet-body"></div></div>
 
   <!-- tab bar -->
-  <nav class="tabbar" id="tabbar">
-    <button data-tab="today" class="on"><span class="tb-ic">☀️</span>Today</button>
-    <button data-tab="cal"><span class="tb-ic">📅</span>Plan</button>
-    <button data-tab="kids"><span class="tb-ic">🧒</span>Kids</button>
-    <button data-tab="gym"><span class="tb-ic">🏋️</span>Gym</button>
-    <button data-tab="house"><span class="tb-ic">🧹</span>House</button>
-    <button data-tab="more"><span class="tb-ic">⋯</span>More</button>
+  <nav class="tabbar" id="tabbar" aria-label="Primary navigation">
+    <button type="button" data-tab="today" class="on" aria-current="page"><span class="tb-ic" aria-hidden="true">☀️</span>Today</button>
+    <button type="button" data-tab="cal"><span class="tb-ic" aria-hidden="true">📅</span>Plan</button>
+    <button type="button" data-tab="kids"><span class="tb-ic" aria-hidden="true">🧒</span>Kids</button>
+    <button type="button" data-tab="gym"><span class="tb-ic" aria-hidden="true">🏋️</span>Gym</button>
+    <button type="button" data-tab="house"><span class="tb-ic" aria-hidden="true">🧹</span>House</button>
+    <button type="button" data-tab="more"><span class="tb-ic" aria-hidden="true">⋯</span>More</button>
   </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 </div>
 
 <script>
 "use strict";
 /* ================= UTILITIES ================= */
-const APP_V="2.3 — 15 July 2026";   // bump whenever you push an update
+const APP_V="2.4 — 18 July 2026";   // bump whenever you push an update
 const $ = id => document.getElementById(id);
-const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 const fmtSec = s => { s=Math.max(0,s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
 const Dt = {
   parse(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d,12,0,0); },
@@ -459,7 +467,36 @@ function fmtTime(t){ if(!t) return "time TBC"; const [h,m]=t.split(":").map(Numb
   const ap=h>=12?"pm":"am"; const h12=((h+11)%12)+1; return h12+(m?":"+String(m).padStart(2,"0"):"")+ap; }
 function nowMins(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
 function toMins(t){ if(!t) return 18*60; const [h,m]=t.split(":").map(Number); return h*60+m; }
-function uid(){ return Math.random().toString(36).slice(2,9); }
+function uid(){ return globalThis.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+function isObj(v){ return !!v && typeof v==="object" && !Array.isArray(v); }
+function mergeDefaults(base,saved){
+  if(Array.isArray(base)) return Array.isArray(saved)?clone(saved):clone(base);
+  if(isObj(base)){
+    const src=isObj(saved)?saved:{}, out={};
+    Object.keys(base).forEach(k=>{ out[k]=mergeDefaults(base[k],src[k]); });
+    Object.keys(src).forEach(k=>{ if(!(k in out)) out[k]=clone(src[k]); });
+    return out;
+  }
+  return saved===undefined?base:saved;
+}
+function downloadText(filename,text,type){
+  const blob=new Blob([text],{type:type||"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function copyText(text){
+  if(navigator.clipboard){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){} }
+  const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(e){} ta.remove(); return ok;
+}
+let toastTimer=null;
+function notify(message,tone){
+  const el=$("toast"); if(!el) return;
+  el.textContent=message; el.className="toast show"+(tone==="error"?" error":"");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ el.className="toast"; },2600);
+}
 /* ================= STORE & DEFAULTS ================= */
 const DEFAULT_ACTS = [
   {id:"zsoc_mon", kid:"Ziggy", name:"Soccer training", dow:0, start:"16:30", end:"17:30", termOnly:true, who:"tracey", varies:false, note:"Tracey always takes him", gear:["Boots","Shin pads","Socks","Water bottle"]},
@@ -473,7 +510,8 @@ const DEFAULT_ACTS = [
   {id:"volley",   kid:"Me", name:"Volleyball", dow:3, start:"19:15", end:"20:15", termOnly:true, who:"me", varies:true, note:"Games 7:15 or 8:35 — draw not out yet", gear:[]}
 ];
 const DEFAULTS = {
-  v:1,
+  v:2,
+  meta:{lastBackup:null},
   settings:{
     custodyAnchor:"2026-07-06",        // Monday of Week A
     terms:[["2026-01-28","2026-04-02"],["2026-04-20","2026-06-26"],["2026-07-13","2026-09-18"],["2026-10-05","2026-12-18"]],
@@ -529,15 +567,29 @@ const DEFAULTS = {
   ui:{ open:{} }        // collapsible card states
 };
 let S;
+let storeWarning="";
+function normaliseStore(saved){
+  const out=mergeDefaults(DEFAULTS,isObj(saved)?saved:{});
+  out.v=2;
+  if(typeof out.meta.lastBackup!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(out.meta.lastBackup)) out.meta.lastBackup=null;
+  if(!Array.isArray(out.activities)||!out.activities.length) out.activities=clone(DEFAULT_ACTS);
+  if(!Array.isArray(out.settings.showerFirst)||out.settings.showerFirst.length!==7) out.settings.showerFirst=clone(DEFAULTS.settings.showerFirst);
+  ["tasks","events","resets","holidays","routines"].forEach(k=>{ if(!Array.isArray(out[k])) out[k]=clone(DEFAULTS[k]); });
+  out.activities=out.activities.filter(isObj);
+  out.activities.forEach(a=>{ if(a.kid==="Lottie") a.kid="Lotti"; if(!a.id)a.id=uid(); if(!Array.isArray(a.gear))a.gear=[]; });
+  return out;
+}
 function loadStore(){
   let saved={};
-  try{ saved = JSON.parse(localStorage.getItem("la_v1")||"{}"); }catch(e){}
-  S = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS)), saved);
-  S.settings = Object.assign({}, DEFAULTS.settings, saved.settings||{});
-  if(!saved.activities || !saved.activities.length) S.activities = JSON.parse(JSON.stringify(DEFAULT_ACTS));
-  S.activities.forEach(a=>{ if(a.kid==="Lottie") a.kid="Lotti"; });   // spelling migration
+  storeWarning="";
+  try{ saved=JSON.parse(localStorage.getItem("la_v1")||"{}"); }
+  catch(e){ storeWarning="Your saved data could not be read, so the app opened with safe defaults."; }
+  S=normaliseStore(saved);
 }
-function save(){ try{ localStorage.setItem("la_v1", JSON.stringify(S)); }catch(e){} }
+function save(){
+  try{ localStorage.setItem("la_v1",JSON.stringify(S)); return true; }
+  catch(e){ notify("Could not save — export a backup before closing the app.","error"); return false; }
+}
 
 /* ================= RULES ENGINE ================= */
 function termOf(d){
@@ -1008,7 +1060,7 @@ function coll(id,title,inner,opts){
   opts=opts||{};
   const open=S.ui.open[id]!==undefined?S.ui.open[id]:!!opts.open;
   return '<div class="card coll'+(open?" open":"")+'">'
-    +'<button class="coll-head" onclick="LA.collToggle(\''+id+'\','+(open?1:0)+')"><span class="c-title">'+title+'</span>'+(opts.badge||"")+'<span class="coll-chev">›</span></button>'
+    +'<button class="coll-head" aria-expanded="'+open+'" onclick="LA.collToggle(\''+id+'\','+(open?1:0)+')"><span class="c-title">'+title+'</span>'+(opts.badge||"")+'<span class="coll-chev" aria-hidden="true">›</span></button>'
     +(open?'<div style="margin-top:8px">'+inner+'</div>':(opts.sub?'<div class="c-sub" style="margin-top:2px">'+opts.sub+'</div>':""))
     +'</div>';
 }
@@ -1608,7 +1660,9 @@ function startReset(){
 }
 function updateRunUI(){
   const bt=$("big-timer"); bt.textContent=fmtSec(R.remaining); bt.classList.toggle("low",R.remaining<=120);
-  $("progress-fill").style.width=(R.total?Math.min(100,100*(R.total-R.remaining)/R.total):0)+"%";
+  const pct=R.total?Math.min(100,Math.max(0,100*(R.total-R.remaining)/R.total)):0;
+  $("progress-fill").style.width=pct+"%";
+  $("reset-progress").setAttribute("aria-valuenow",String(Math.round(pct)));
   const z=R.zones[R.cur];
   if(z){ const zt=$("zone-time"); zt.textContent=fmtSec(R.zoneElapsed)+" / "+z.min+":00"; zt.classList.toggle("over",R.zoneElapsed>z.min*60); }
 }
@@ -1833,11 +1887,14 @@ function renderSettings(){
     +'<div class="btn-row" style="margin-bottom:4px"><button class="btn btn-sm btn-secondary" onclick="LA.holAdd()">＋ Add holiday</button></div>';
   h+='<button class="toggle-row" onclick="LA.holGym()"><div><div class="tr-name">Holidays free up gym mornings</div><div class="tr-desc">Non-work public holidays count as gym-friendly mornings (kid-free ones)</div></div><div class="switch'+(S.settings.holidayGym!==false?" on":"")+'"></div></button>';
   h+='<div class="section-label">Backup</div>'
-    +'<div class="field"><textarea id="backup-box" rows="3" placeholder="Export puts your data here — copy it somewhere safe. Paste a backup here and tap Import to restore."></textarea></div>'
-    +'<div class="btn-row"><button class="btn btn-secondary" onclick="LA.exportData()">Export</button>'
+    +'<div class="card calm"><div class="c-title">Your data stays on this device</div><div class="c-sub">Download a backup regularly so an iOS cleanup or phone change cannot take your history with it.</div>'
+    +'<div class="mini-note">'+(S.meta.lastBackup?'Last backup: '+Dt.long(S.meta.lastBackup):'No backup recorded yet.')+'</div></div>'
+    +'<div class="field"><label for="backup-box">Backup data</label><textarea id="backup-box" rows="4" placeholder="Download fills this box too. To restore, paste a backup here and tap Import."></textarea></div>'
+    +'<div class="btn-row"><button class="btn btn-primary" onclick="LA.exportData()">Download backup</button>'
+    +'<button class="btn btn-secondary" onclick="LA.copyBackup()">Copy backup</button>'
     +'<button class="btn btn-secondary" onclick="LA.importData()">Import</button>'
     +'<button class="btn btn-danger" onclick="LA.wipe()">Erase everything</button></div>'
-    +'<div class="mini-note">Data lives only on this phone (localStorage). Export occasionally — especially before iOS updates.</div>';
+    +'<div class="mini-note">The backup is a readable JSON file. Keep it somewhere private; it can contain health notes and personal history.</div>';
   $("settings-body").innerHTML=h;
 }
 function dateField(lbl,key,val){ return '<div class="field"><label>'+lbl+'</label><input type="date" value="'+val+'" onchange="LA.setSet(\''+key+'\',this.value)"></div>'; }
@@ -2086,7 +2143,7 @@ function slipSheetHTML(){
 const ALL_SCREENS=["today","cal","kids","gym","house","more","work","review","settings","help","custom","health","calm","streak","run","rdone"];
 const RENDER={today:renderToday,cal:renderCal,kids:renderKids,gym:renderGym,house:renderHouse,more:renderMore,work:renderWork,review:renderReview,settings:renderSettings,help:renderHelp,custom:renderCustom,health:renderHealth,calm:renderCalm,streak:renderStreak};
 function showRaw(name){
-  ALL_SCREENS.forEach(n=>{ const el=$("screen-"+n); if(el) el.classList.toggle("active",n===name); });
+  ALL_SCREENS.forEach(n=>{ const el=$("screen-"+n); if(el){ const active=n===name; el.classList.toggle("active",active); el.hidden=!active; el.setAttribute("aria-hidden",String(!active)); } });
   $("tabbar").classList.toggle("hidden",name==="run"||name==="rdone");
   $("bar-run").classList.toggle("active",name==="run");
   $("bar-rdone").classList.toggle("active",name==="rdone");
@@ -2099,13 +2156,21 @@ const LA={
     if(RENDER[name]) RENDER[name]();
     showRaw(name);
     const tab={today:"today",cal:"cal",kids:"kids",gym:"gym",house:"house",more:"more",work:"more",review:"more",settings:"more",help:"more",custom:"house",health:"more",calm:"more",streak:"more"}[name]||"today";
-    document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+    document.querySelectorAll("#tabbar button").forEach(b=>{ const on=b.dataset.tab===tab; b.classList.toggle("on",on); if(on)b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
     LA.closeSheet();
   },
   render(){ if(RENDER[LA.current]) RENDER[LA.current](); },
   /* sheet */
-  openSheet(html){ $("sheet-body").innerHTML=html; $("sheet").classList.add("show"); $("sheet-back").classList.add("show"); },
-  closeSheet(){ $("sheet").classList.remove("show"); $("sheet-back").classList.remove("show"); },
+  openSheet(html){
+    LA.returnFocus=document.activeElement;
+    $("sheet-body").innerHTML=html; $("sheet").classList.add("show"); $("sheet").setAttribute("aria-hidden","false"); $("sheet").setAttribute("aria-label",($("sheet").querySelector("h3")||{}).textContent||"Dialog"); $("sheet-back").classList.add("show");
+    requestAnimationFrame(()=>{ const f=$("sheet").querySelector("input,select,textarea,button,[tabindex]:not([tabindex='-1'])"); (f||$("sheet")).focus(); });
+  },
+  closeSheet(){
+    const wasOpen=$("sheet").classList.contains("show");
+    $("sheet").classList.remove("show"); $("sheet").setAttribute("aria-hidden","true"); $("sheet").removeAttribute("aria-label"); $("sheet-back").classList.remove("show");
+    if(wasOpen&&LA.returnFocus&&document.contains(LA.returnFocus)&&!LA.returnFocus.closest("[hidden]")) LA.returnFocus.focus();
+  },
   /* today */
   whatNow(){
     const a=nowAction(), el=$("now-card");
@@ -2311,16 +2376,25 @@ const LA={
     save(); LA.render();
   },
   bpToggle(){ S.bp.daily=!S.bp.daily; save(); LA.render(); },
+  openTextExport(title,description,text,filename,shareTitle){
+    LA.exportPayload={text,filename,shareTitle:shareTitle||title};
+    LA.openSheet('<h3>'+title+'</h3><div class="sub">'+description+'</div>'
+      +'<div class="field" style="margin-top:10px"><label for="export-text">Export data</label><textarea rows="8" id="export-text" readonly>'+esc(text)+'</textarea></div>'
+      +'<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="LA.copyCurrentExport()">Copy</button>'
+      +'<button class="btn btn-secondary" onclick="LA.downloadCurrentExport()">Download</button>'
+      +(navigator.share?'<button class="btn btn-secondary" onclick="LA.shareCurrentExport()">Share…</button>':"")+'</div>');
+  },
+  async copyCurrentExport(){
+    const p=LA.exportPayload; if(!p)return;
+    const ok=await copyText(p.text); notify(ok?"Copied to clipboard.":"Could not copy — select the text manually.",ok?"":"error");
+  },
+  downloadCurrentExport(){ const p=LA.exportPayload; if(p){ downloadText(p.filename,p.text,p.filename.endsWith(".csv")?"text/csv;charset=utf-8":"application/json"); notify("Download started."); } },
+  shareCurrentExport(){ const p=LA.exportPayload; if(p&&navigator.share)navigator.share({title:p.shareTitle,text:p.text}).catch(()=>{}); },
   bpExport(){
     if(!S.bp.log.length){ alert("No readings yet."); return; }
     const csv="date,time,systolic,diastolic,pulse\n"+S.bp.log.map(r=>[r.date,r.time,r.sys,r.dia,r.pulse||""].join(",")).join("\n");
-    LA.openSheet('<h3>🩺 Export readings</h3><div class="sub">'+S.bp.log.length+' readings as CSV — copy into Notes, Numbers, or an email to your GP.</div>'
-      +'<div class="field" style="margin-top:10px"><textarea rows="8" id="bp-csv" readonly>'+esc(csv)+'</textarea></div>'
-      +'<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="LA.bpCopy()">Copy CSV</button>'
-      +(navigator.share?'<button class="btn btn-secondary" onclick="LA.bpShare()">Share…</button>':"")+'</div>');
+    LA.openTextExport("🩺 Export readings",S.bp.log.length+" readings as CSV — copy into Numbers or send to your GP.",csv,"blood-pressure-"+Dt.today()+".csv","Blood pressure log");
   },
-  bpCopy(){ const b=$("bp-csv"); b.select(); try{document.execCommand("copy");}catch(e){} if(navigator.clipboard)navigator.clipboard.writeText(b.value).catch(()=>{}); alert("Copied."); },
-  bpShare(){ const b=$("bp-csv"); if(navigator.share) navigator.share({title:"Blood pressure log",text:b.value}).catch(()=>{}); },
   /* weight */
   weightSave(){
     const kg=Number($("wt-kg").value);
@@ -2334,10 +2408,7 @@ const LA={
   weightExport(){
     if(!S.weight.log.length){ alert("No entries yet."); return; }
     const csv="date,time,kg\n"+S.weight.log.map(r=>[r.date,r.time,r.kg].join(",")).join("\n");
-    LA.openSheet('<h3>⚖️ Export weight</h3><div class="sub">'+S.weight.log.length+' entries as CSV.</div>'
-      +'<div class="field" style="margin-top:10px"><textarea rows="8" id="bp-csv" readonly>'+esc(csv)+'</textarea></div>'
-      +'<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="LA.bpCopy()">Copy CSV</button>'
-      +(navigator.share?'<button class="btn btn-secondary" onclick="LA.bpShare()">Share…</button>':"")+'</div>');
+    LA.openTextExport("⚖️ Export weight",S.weight.log.length+" entries as CSV.",csv,"weight-"+Dt.today()+".csv","Weight log");
   },
   /* routines & showers */
   showerToggle(i){
@@ -2452,16 +2523,23 @@ const LA={
   },
   actDel(id){ if(!confirm("Delete this activity?")) return; S.activities=S.activities.filter(a=>a.id!==id); save(); LA.closeSheet(); renderSettings(); },
   exportData(){
-    const box=$("backup-box"); box.value=JSON.stringify(S);
-    box.select(); try{ document.execCommand("copy"); }catch(e){}
-    if(navigator.clipboard) navigator.clipboard.writeText(box.value).catch(()=>{});
-    alert("Backup created and copied. Paste it into Notes to keep it safe.");
+    S.meta.lastBackup=Dt.today(); save();
+    const text=JSON.stringify(S,null,2), box=$("backup-box"); if(box)box.value=text;
+    downloadText("life-admin-backup-"+Dt.today()+".json",text,"application/json");
+    notify("Backup downloaded."); renderSettings();
+  },
+  async copyBackup(){
+    const box=$("backup-box"), text=(box&&box.value.trim())||JSON.stringify(S,null,2);
+    if(box&&!box.value)box.value=text;
+    S.meta.lastBackup=Dt.today(); save();
+    const ok=await copyText(text); notify(ok?"Backup copied to clipboard.":"Could not copy — select the backup text manually.",ok?"":"error");
   },
   importData(){
     const v=$("backup-box").value.trim(); if(!v){ alert("Paste a backup into the box first."); return; }
-    try{ const data=JSON.parse(v); if(!data.settings) throw 0;
+    try{ const data=JSON.parse(v); if(!isObj(data)||!isObj(data.settings)) throw 0;
       if(!confirm("Replace everything on this phone with the pasted backup?")) return;
-      localStorage.setItem("la_v1",JSON.stringify(data)); loadStore(); LA.go("today");
+      const restored=normaliseStore(data);
+      localStorage.setItem("la_v1",JSON.stringify(restored)); loadStore(); LA.go("today"); notify("Backup restored.");
     }catch(e){ alert("That doesn't look like a valid backup."); }
   },
   wipe(){ if(!confirm("Erase ALL app data on this phone? This can't be undone.")) return;
@@ -2482,9 +2560,9 @@ $("run-task-list").addEventListener("click",e=>{
 $("btn-done-zone").addEventListener("click",()=>advanceZone("done"));
 $("btn-skip").addEventListener("click",()=>advanceZone("skipped"));
 $("btn-add2").addEventListener("click",()=>{ R.remaining+=120; R.total+=120; updateRunUI(); });
-$("btn-interrupt").addEventListener("click",()=>{ R.paused=true; relWake(); $("pause-overlay").classList.add("show"); });
-$("btn-resume").addEventListener("click",()=>{ R.paused=false; reqWake(); $("pause-overlay").classList.remove("show"); });
-$("btn-abandon").addEventListener("click",()=>{ $("pause-overlay").classList.remove("show"); R.paused=false; endReset("time"); });
+$("btn-interrupt").addEventListener("click",()=>{ R.paused=true; relWake(); $("pause-overlay").classList.add("show"); $("pause-overlay").setAttribute("aria-hidden","false"); $("btn-resume").focus(); });
+$("btn-resume").addEventListener("click",()=>{ R.paused=false; reqWake(); $("pause-overlay").classList.remove("show"); $("pause-overlay").setAttribute("aria-hidden","true"); $("btn-interrupt").focus(); });
+$("btn-abandon").addEventListener("click",()=>{ $("pause-overlay").classList.remove("show"); $("pause-overlay").setAttribute("aria-hidden","true"); R.paused=false; endReset("time"); });
 $("btn-finish").addEventListener("click",()=>{
   const v=$("note-input").value.trim(); if(v){ S.note=v; save(); }
   LA.go("today");
@@ -2496,11 +2574,19 @@ function freshCheck(){
   if(lastRenderDay!==now){ lastRenderDay=now; if(!R.running) LA.go("today"); }
 }
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") freshCheck(); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&$("sheet").classList.contains("show")){ e.preventDefault(); LA.closeSheet(); }
+  if(e.key==="Tab"&&$("sheet").classList.contains("show")){
+    const focusable=[...$("sheet").querySelectorAll("button,input,select,textarea,[tabindex]:not([tabindex='-1'])")].filter(el=>!el.disabled);
+    if(focusable.length){ const first=focusable[0],last=focusable[focusable.length-1]; if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();} else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();} }
+  }
+});
 window.addEventListener("pageshow",freshCheck);
 setInterval(()=>{ freshCheck(); if(document.visibilityState==="visible"&&LA.current==="today") renderToday(); },60000);
 loadStore();
 lastRenderDay=Dt.today();
 LA.go("today");
+if(storeWarning) notify(storeWarning,"error");
 </script>
 
 </body>
