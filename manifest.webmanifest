@@ -1,0 +1,26 @@
+{
+  "name": "Life Admin — Calm command centre",
+  "short_name": "Life Admin",
+  "description": "A calm, private command centre for family, tasks, health, home and the week ahead.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101614",
+  "theme_color": "#101614",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
