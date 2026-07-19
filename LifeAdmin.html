@@ -3,27 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#101318">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101614">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="A calm, private command centre for family, tasks, health, home and the week ahead.">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Life">
+<meta name="apple-mobile-web-app-title" content="Life Admin">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Life Admin — Dehne</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<title>Life Admin</title>
 <!--
   DEHNE'S LIFE ADMIN — single-file app, works offline, saves to localStorage.
   Save to iPhone Home Screen: instructions are inside the app under More > Help.
 -->
 <style>
   :root{
-    --bg:#101318; --surface:#1a1f27; --surface2:#232a34; --line:#2c3440;
-    --text:#e8ecf1; --muted:#8a94a3;
-    --amber:#eda94e; --amber-dim:rgba(237,169,78,.14);
-    --green:#6fbf8f; --green-dim:rgba(111,191,143,.14);
-    --red:#d97a6c; --red-dim:rgba(217,122,108,.14);
-    --blue:#7aa2d6; --blue-dim:rgba(122,162,214,.14);
-    --purple:#b48bd6; --purple-dim:rgba(180,139,214,.16);
-    --radius:16px; color-scheme:dark;
+    /* Life Admin v3 skin — forest dark (default) */
+    --bg:#101614; --surface:#1b2522; --surface2:#222e2a; --line:rgba(235,242,237,.11);
+    --text:#f2f3ed; --muted:#98a39e;
+    --amber:#ef8057; --amber-dim:rgba(239,128,87,.16); --gold:#f4bd69;
+    --green:#72bea2; --green-dim:rgba(114,190,162,.16);
+    --red:#e09086; --red-dim:rgba(224,144,134,.16);
+    --blue:#84b5d1; --blue-dim:rgba(132,181,209,.16);
+    --purple:#bca4d2; --purple-dim:rgba(188,164,210,.18);
+    --radius:20px; color-scheme:dark;
+    --shadow:0 14px 45px rgba(0,0,0,.22);
     --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  [data-theme="light"]{
+    --bg:#f3f0e9; --surface:#fffdf9; --surface2:#ebe7de; --line:rgba(25,43,38,.12);
+    --text:#17201e; --muted:#66716d;
+    --amber:#db6b43; --amber-dim:rgba(219,107,67,.14); --gold:#f1b45f;
+    --green:#2e7d65; --green-dim:#dcebe5;
+    --red:#a84d45; --red-dim:rgba(168,77,69,.12);
+    --blue:#3e6f91; --blue-dim:#dce8ef;
+    --purple:#735d8c; --purple-dim:rgba(115,93,140,.14);
+    --shadow:0 14px 45px rgba(35,42,38,.10);
+    color-scheme:light;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -271,6 +288,25 @@
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 10px}
   .divider{height:1px;background:var(--line);margin:14px 0}
   @media (max-width:370px){.screen{padding-left:12px;padding-right:12px}.tabbar button{font-size:9.5px}.tabbar button .tb-ic{font-size:18px}}
+  /* ===== V3 SKIN — forest & cream, terracotta accent ===== */
+  .hero{position:relative;overflow:hidden;background:var(--text);color:var(--bg);border-radius:26px;padding:22px 20px 20px;box-shadow:var(--shadow)}
+  .hero::before{content:"";position:absolute;right:-80px;top:-95px;width:235px;height:235px;border-radius:50%;border:30px solid var(--amber);opacity:.3}
+  .hero .h-eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--amber)}
+  .hero .h-title{font-size:29px;line-height:1.12;font-weight:800;letter-spacing:-.02em;margin-top:8px;position:relative}
+  .hero .h-sub{margin-top:8px;font-size:14px;line-height:1.5;opacity:.72;max-width:36ch;position:relative}
+  .hero .whatnow{margin-top:16px;width:auto;display:inline-flex;background:var(--bg);color:var(--text);padding:14px 18px;min-height:52px;border-radius:14px;font-size:16px;position:relative}
+  .card{box-shadow:0 8px 28px rgba(0,0,0,.10)}
+  [data-theme="light"] .card{box-shadow:0 8px 28px rgba(35,42,38,.06)}
+  .tabbar{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:460px;border:1px solid var(--line);border-top:1px solid var(--line);border-radius:22px;padding:8px 4px;background:rgba(20,28,25,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--shadow)}
+  [data-theme="light"] .tabbar{background:rgba(255,253,249,.92)}
+  .btn{border-radius:13px}
+  .btn-primary,.whatnow{color:#101614}
+  .hero .whatnow{color:var(--text)}
+  .chip.me{border-color:rgba(239,128,87,.5)}
+  [data-theme="light"] .chip.me{border-color:rgba(219,107,67,.45)}
+  .now-card{border-radius:18px}
+  .sheet{border-radius:26px 26px 0 0;background:var(--surface)}
+  input::placeholder,textarea::placeholder{color:var(--muted);opacity:.65}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -280,7 +316,6 @@
   <!-- ===== TODAY ===== -->
   <section class="screen active" id="screen-today">
     <div id="today-head"></div>
-    <button class="whatnow" id="btn-whatnow">🎯 What should I do now?</button>
     <div class="now-card" id="now-card"></div>
     <div id="today-body"></div>
   </section>
@@ -446,7 +481,7 @@
 <script>
 "use strict";
 /* ================= UTILITIES ================= */
-const APP_V="2.4 — 18 July 2026";   // bump whenever you push an update
+const APP_V="3.0 — 20 July 2026";   // bump whenever you push an update
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 const fmtSec = s => { s=Math.max(0,s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
@@ -1209,8 +1244,19 @@ function renderToday(){
   const d=Dt.today(), info=dayInfo(d), t=nowMins();
   // header
   const cust=info.night==="me";
+  const hr=new Date().getHours();
+  const greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening";
+  const TAGS=["The day is workable.","One thing at a time.","Good enough wins today.","Calm is a strategy."];
+  const tag=TAGS[((Dt.diff(d,"2026-01-01")%TAGS.length)+TAGS.length)%TAGS.length];
+  let heroSub=cust?"The kids are with you tonight — keep the handovers simple and let good-enough win.":"Quiet house tonight — a good night to bank something for future you.";
+  if(info.stack) heroSub="Stacked evening ahead — transport, dinner, gear. You've got the list.";
+  if(choirNight(info)) heroSub="Choir night — the evening runs late and that's fine. It's the plan.";
+  if(info.holiday&&!info.holiday.work) heroSub=info.holiday.name+" — no work today. Slow start earned.";
   $("today-head").innerHTML =
-    '<div class="eyebrow">Today</div><h1>'+Dt.long(d)+'</h1>'
+    '<div class="hero"><div class="h-eyebrow">'+Dt.long(d)+'</div>'
+    +'<h1 class="h-title">'+greet+', Dehne.<br>'+esc(tag)+'</h1>'
+    +'<div class="h-sub">'+esc(heroSub)+'</div>'
+    +'<button class="whatnow" id="btn-whatnow" onclick="LA.whatNow()">🎯 What should I do now?</button></div>'
     +'<div class="chips">'
     +'<div class="chip '+(cust?'me':'tracey')+'">'+(cust?'🧒 Kids with you tonight':'Kids with Tracey tonight')+'</div>'
     +'<div class="chip '+(info.ts.inTerm?'term':'')+'">'+info.ts.label+(info.ts.backIn?' · school back in '+info.ts.backIn+'d':'')+'</div>'
@@ -1809,6 +1855,7 @@ function renderMore(){
      '<button class="card tap" onclick="LA.go(\'review\')"><div class="c-title">🧭 Weekly review <span>›</span></div><div class="c-sub">Sunday check-in, calm scorecard, next week preview</div></button>',
      '<button class="card tap" onclick="LA.go(\'settings\')"><div class="c-title">⚙️ Settings <span>›</span></div><div class="c-sub">Dates, activities, anchors, backup</div></button>',
      '<button class="card tap" onclick="LA.go(\'help\')"><div class="c-title">❓ Help <span>›</span></div><div class="c-sub">Save to iPhone Home Screen, how data works</div></button>',
+     '<button class="card tap" onclick="LA.themeToggle()"><div class="c-title">◐ Appearance <span class="pill dim">'+((S.settings.theme||"dark")==="dark"?"Forest dark":"Cream light")+'</span></div><div class="c-sub">Tap to switch theme</div></button>',
      '<div class="mini-note" style="text-align:center;margin-top:14px">Version '+APP_V+'</div>'].join("");
 }
 function renderSettings(){
@@ -2542,6 +2589,7 @@ const LA={
       localStorage.setItem("la_v1",JSON.stringify(restored)); loadStore(); LA.go("today"); notify("Backup restored.");
     }catch(e){ alert("That doesn't look like a valid backup."); }
   },
+  themeToggle(){ S.settings.theme=(S.settings.theme||"dark")==="dark"?"light":"dark"; save(); applyTheme(); LA.render(); },
   wipe(){ if(!confirm("Erase ALL app data on this phone? This can't be undone.")) return;
     if(!confirm("Really sure? Export a backup first if in doubt.")) return;
     localStorage.removeItem("la_v1"); loadStore(); LA.go("today"); }
@@ -2550,7 +2598,6 @@ window.LA=LA;
 
 /* ================= STATIC EVENTS & INIT ================= */
 document.querySelectorAll("#tabbar button").forEach(b=>b.addEventListener("click",()=>LA.go(b.dataset.tab)));
-$("btn-whatnow").addEventListener("click",LA.whatNow);
 $("run-task-list").addEventListener("click",e=>{
   const btn=e.target.closest(".task"); if(!btn) return;
   const i=Number(btn.dataset.i), set=R.checks[R.cur];
@@ -2583,10 +2630,20 @@ document.addEventListener("keydown",e=>{
 });
 window.addEventListener("pageshow",freshCheck);
 setInterval(()=>{ freshCheck(); if(document.visibilityState==="visible"&&LA.current==="today") renderToday(); },60000);
+function applyTheme(){
+  const t=S.settings.theme||"dark";
+  document.documentElement.setAttribute("data-theme",t);
+  const m=document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute("content",t==="light"?"#f3f0e9":"#101614");
+}
 loadStore();
+applyTheme();
 lastRenderDay=Dt.today();
 LA.go("today");
 if(storeWarning) notify(storeWarning,"error");
+if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
+  navigator.serviceWorker.register("./sw.js").catch(function(){});
+}
 </script>
 
 </body>

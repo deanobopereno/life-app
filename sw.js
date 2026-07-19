@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "life-admin-v3-20260718";
+const CACHE = "life-admin-v30-20260720";
 const CORE = [
   "./",
   "./index.html",
